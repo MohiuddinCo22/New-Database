@@ -19,13 +19,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-export const FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
+export const firebaseConfig = {
+  apiKey: "AIzaSyAJioek6Swz34T8vKmq6GcNPGivjPYkN6c",
+  authDomain: "new-7780e.firebaseapp.com",
+  projectId: "new-7780e",
+  storageBucket: "new-7780e.firebasestorage.app",
+  messagingSenderId: "995398256300",
+  appId: "1:995398256300:web:1235bb9b328ef83e824109"
 };
 
 // Primary app instance used for the whole session.
