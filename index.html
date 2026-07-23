@@ -1,1 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>KeyVault — Order &amp; Key Management</title>
+<meta name="description" content="Order and license-key management dashboard" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ============================== LOGIN SCREEN ============================== -->
+<section id="loginScreen" class="screen screen--active">
+  <form id="loginForm" class="login-card" autocomplete="on">
+    <div class="login-card__badge">🔐</div>
+    <h1>KeyVault</h1>
+    <p class="sub">Sign in to manage orders &amp; license keys.</p>
+
+    <label class="field">
+      <span>Email</span>
+      <input type="email" name="email" required autocomplete="username" placeholder="you@example.com" />
+    </label>
+    <label class="field">
+      <span>Password</span>
+      <input type="password" name="password" required autocomplete="current-password" placeholder="••••••••" />
+    </label>
+    <p id="loginError" class="login-error"></p>
+    <button type="submit" class="btn btn--primary btn--block">Sign In</button>
+  </form>
+</section>
+
+<!-- ============================== APP SHELL ============================== -->
+<div id="appShell" class="shell">
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar__brand">
+      <div class="sidebar__brand-icon">🔐</div>
+      <span>KeyVault</span>
+    </div>
+
+    <nav>
+      <button class="nav-btn nav-btn--active" data-view="dashboard"><span class="nav-btn__icon">▦</span> Dashboard</button>
+      <button class="nav-btn admin-only" data-view="generate"><span class="nav-btn__icon">✦</span> Generate Key</button>
+      <button class="nav-btn" data-view="orders"><span class="nav-btn__icon">☰</span> Orders</button>
+      <button class="nav-btn" data-view="search"><span class="nav-btn__icon">⌕</span> Search</button>
+      <button class="nav-btn" data-view="reports"><span class="nav-btn__icon">◔</span> Reports</button>
+      <button class="nav-btn" data-view="settings"><span class="nav-btn__icon">⚙</span> Settings</button>
+    </nav>
+
+    <button class="nav-btn nav-btn--logout" data-view="logout"><span class="nav-btn__icon">⏻</span> Logout</button>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button id="menuToggle" class="menu-toggle" aria-label="Toggle menu">☰</button>
+        <h1 class="topbar__title" id="topbarTitle">Dashboard</h1>
+      </div>
+      <div class="topbar__right">
+        <label class="theme-switch">
+          🌙
+          <span class="switch">
+            <input type="checkbox" id="themeToggle" />
+            <span class="switch__slider"></span>
+          </span>
+          ☀️
+        </label>
+        <div class="user-chip">
+          <p class="user-chip__name" id="currentUserName">—</p>
+          <p class="user-chip__role" id="currentUserRole">—</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- DASHBOARD -->
+      <section class="view view--active" data-view="dashboard">
+        <div class="stat-grid" id="dashboardCards"></div>
+        <div class="card card--glass" style="text-align:center; color:var(--text-dim); font-size:13.5px;">
+          Head to <strong>Orders</strong> for the full, searchable key list, or <strong>Generate Key</strong> to issue a new one.
+        </div>
+      </section>
+
+      <!-- GENERATE KEY (admin only) -->
+      <section class="view" data-view="generate">
+        <div class="card card--glass generate-panel">
+          <div class="vault-icon">🗝️</div>
+          <h2>Generate a New Key</h2>
+          <p>Every click creates a unique 16-character key with an auto-incrementing serial and order ID — never a duplicate.</p>
+          <button id="generateKeyBtn" class="btn btn--primary btn--generate">Generate New Key</button>
+          <div id="generateResult"></div>
+        </div>
+      </section>
+
+      <!-- ORDERS -->
+      <section class="view" data-view="orders">
+        <div class="section-head">
+          <h2>All Orders</h2>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn--ghost" id="exportCsvBtn">⬇ Export CSV</button>
+            <label class="btn btn--ghost admin-only" style="cursor:pointer;">
+              ⬆ Import CSV
+              <input type="file" id="importCsvInput" accept=".csv" style="display:none;" />
+            </label>
+          </div>
+        </div>
+        <div class="filters">
+          <button class="filter-chip filter-chip--active" data-filter="all">All</button>
+          <button class="filter-chip" data-filter="paid">Paid</button>
+          <button class="filter-chip" data-filter="due">Due</button>
+          <button class="filter-chip" data-filter="activated">Activated</button>
+          <button class="filter-chip" data-filter="not-activated">Not Activated</button>
+        </div>
+        <div class="card table-wrap" style="padding:0;">
+          <table>
+            <thead><tr>
+              <th>Serial No.</th><th>User ID</th><th>Generated Key</th><th>Price</th>
+              <th>Payment</th><th>Activation</th><th>Date</th><th>Time</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="ordersBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="ordersPagination"></div>
+      </section>
+
+      <!-- SEARCH -->
+      <section class="view" data-view="search">
+        <div class="section-head"><h2>Search Keys &amp; Orders</h2></div>
+        <div class="search-bar">
+          <span class="search-bar__icon">⌕</span>
+          <input type="text" id="searchInput" placeholder="Search by User ID, Generated Key, or Payment Status…" />
+        </div>
+        <div class="card table-wrap" style="padding:0;">
+          <table>
+            <thead><tr>
+              <th>Serial No.</th><th>User ID</th><th>Generated Key</th><th>Price</th>
+              <th>Payment</th><th>Activation</th><th>Date</th><th>Time</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="searchOrdersBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="searchPagination"></div>
+      </section>
+
+      <!-- REPORTS -->
+      <section class="view" data-view="reports">
+        <div class="section-head"><h2>Reports</h2></div>
+        <div class="card card--glass" id="reportSummary"></div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="view" data-view="settings">
+        <div class="section-head"><h2>Settings</h2></div>
+        <div class="settings-grid">
+          <div class="card">
+            <h3 style="margin-bottom:14px;">Change Password</h3>
+            <form id="changePasswordForm">
+              <label class="field">
+                <span>New Password</span>
+                <input type="password" name="newPassword" minlength="6" required />
+              </label>
+              <button type="submit" class="btn btn--primary">Update Password</button>
+            </form>
+          </div>
+
+          <div class="card admin-only-block" style="display:none;">
+            <h3 style="margin-bottom:4px;">Manage Users <span id="userCount" class="user-row__email"></span></h3>
+            <p style="color:var(--text-dim); font-size:12.5px; margin:0 0 14px;">Max 5 accounts (1 Admin + 4 Authorized Users).</p>
+            <div id="usersList"></div>
+            <hr style="border-color: var(--surface-border); margin:18px 0;" />
+            <form id="addUserForm">
+              <label class="field"><span>Display Name</span><input type="text" name="newUserName" required /></label>
+              <label class="field"><span>Email</span><input type="email" name="newUserEmail" required /></label>
+              <label class="field"><span>Password</span><input type="password" name="newUserPassword" minlength="6" required /></label>
+              <label class="field">
+                <span>Role</span>
+                <select name="newUserRole">
+                  <option value="user">Authorized User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </label>
+              <button type="submit" class="btn btn--primary btn--block">Create Account</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modals / overlays -->
+<div id="confirmOverlay" class="overlay"></div>
+<div id="toastWrap" class="toast-wrap"></div>
+
+<script>
+  // Reveal the admin-only settings block once we know the role (app.js toggles body.is-admin)
+  const obs = new MutationObserver(() => {
+    document.querySelector('.admin-only-block').style.display =
+      document.body.classList.contains('is-admin') ? 'block' : 'none';
+  });
+  obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+  // Keep the topbar title in sync with the active view
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.nav-btn');
+    if (btn && btn.dataset.view && btn.dataset.view !== 'logout') {
+      document.getElementById('topbarTitle').textContent = btn.textContent.trim();
+    }
+  });
+</script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
 
